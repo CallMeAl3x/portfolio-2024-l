@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: "Blanka";
+  font-weight: 400;
+  src: url("/fonts/Blanka/Blanka_Regular.otf") format("opentype");
+}
+
+html,
+body {
+  background-color: black;
+  font-family: Blanka;
+}
+
+.magic {
+  width: 100vw;
+  height: 100vh;
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: hidden;
+}
