@@ -89,7 +89,7 @@ const ThreeScene: React.FC<ThreeSceneProps> = ({
     };
   }, [threeText, xOffset, yOffset, textSize, font]);
 
-  return <div ref={containerRef} className="magic" />;
+  return <div ref={containerRef} className={`${threeText} magic`} />;
 };
 
 export default ThreeScene;
