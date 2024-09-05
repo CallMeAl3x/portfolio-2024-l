@@ -12,7 +12,6 @@ export class CreateParticles {
   raycaster: THREE.Raycaster;
   mouse: THREE.Vector2;
   colorChange: THREE.Color;
-  letterSpacing: number;
   buttom: boolean;
   data: {
     text: string;
@@ -21,7 +20,6 @@ export class CreateParticles {
     particleColor: number;
     absorptionSpeed: number;
     textColor: string;
-    textSize: number;
     area: number;
     ease: number;
   };
@@ -50,7 +48,6 @@ export class CreateParticles {
     this.particleImg = particleImg;
     this.camera = camera;
     this.renderer = renderer;
-    this.letterSpacing = 0.5;
     this.xOffset = xOffset;
     this.yOffset = yOffset;
     this.textSize = textSize;
@@ -65,7 +62,6 @@ export class CreateParticles {
       particleColor: config.particleColor,
       absorptionSpeed: config.absorptionSpeed,
       textColor: config.textColor,
-      textSize: textSize,
       area: config.area,
       ease: config.ease,
     };
@@ -113,7 +109,7 @@ export class CreateParticles {
         copy.getZ(i)
       );
       const direction = center.clone().sub(initPos).normalize();
-      const distance = Math.random() * 10000;
+      const distance = Math.random() * 1000;
       const newPos = center.clone().sub(direction.multiplyScalar(distance));
 
       pos.setXYZ(i, newPos.x, newPos.y, newPos.z);
@@ -123,7 +119,6 @@ export class CreateParticles {
     }
 
     pos.needsUpdate = coulors.needsUpdate = size.needsUpdate = true;
-    this.data.ease = 0.035; // Vitesse de mise en place des particules devant et derrière (SEULEMENT ANIMATION)
   }
 
   releaseParticles() {
@@ -165,7 +160,6 @@ export class CreateParticles {
         currentZ + (newZ - currentZ) * interpolationFactor
       );
 
-      this.colorChange.setHSL(0.5 + Math.random() * 0.2, 0.75, 0.5);
       this.setColorValues(colors, i, this.colorChange);
       size.array[i] = this.data.particleSize * 0.5;
     }
@@ -173,8 +167,6 @@ export class CreateParticles {
     pos.needsUpdate = true;
     colors.needsUpdate = true;
     size.needsUpdate = true;
-
-    this.data.ease = 0.055; // Vitesse de retour des particules devant et derrière (SEULEMENT ANIMATION)
   }
 
   resetMousePosition() {
@@ -250,7 +242,7 @@ export class CreateParticles {
         px -= f * Math.cos(t);
         py -= f * Math.sin(t);
 
-        const absorptionSpeed = CONFIG.absorptionSpeed; // Augmenter cette valeur pour accélérer l'absorption des particules
+        const absorptionSpeed = CONFIG.absorptionSpeed;
         px -= absorptionSpeed * f * Math.cos(t);
         py -= absorptionSpeed * f * Math.sin(t);
 
@@ -321,7 +313,7 @@ export class CreateParticles {
   createText() {
     let thePoints: THREE.Vector3[] = [];
 
-    let shapes = this.font.generateShapes(this.data.text, this.data.textSize);
+    let shapes = this.font.generateShapes(this.data.text, this.textSize);
     let geometry = new THREE.ShapeGeometry(shapes);
     geometry.computeBoundingBox();
 

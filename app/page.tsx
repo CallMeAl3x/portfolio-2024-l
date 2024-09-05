@@ -1,11 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
 import ThreeScene from "./(components)/ThreeScene";
-import Image from "next/image";
 
 export default function Home() {
   const [isMobile, setIsMobile] = useState(false);
-  const [hasMounted, setHasMounted] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
@@ -23,14 +21,6 @@ export default function Home() {
       window.removeEventListener("resize", handleResize);
     };
   }, []);
-
-  useEffect(() => {
-    setHasMounted(true);
-  }, []);
-
-  if (!hasMounted) {
-    return null; // or a loading spinner, etc.
-  }
 
   return (
     <>
@@ -53,14 +43,6 @@ export default function Home() {
           textSize={8}
           font="Magilio"
         />
-        {/* <ThreeTextTest /> */}
-        {/* <Image
-          src="/images/Navbar.png"
-          alt="Navbar"
-          width={677}
-          height={67}
-          className="fixed top-8 left-1/2 transform -translate-x-1/2 -translate-y-[-30%]"
-        /> */}
       </div>
     </>
   );

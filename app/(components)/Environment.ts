@@ -1,7 +1,7 @@
 import { Font, Texture } from "../(types)/three";
 import * as THREE from "three";
 import { CreateParticles } from "./CreateParticules";
-import { Config, CONFIG } from "./config";
+import { CONFIG } from "./config";
 
 export class Environment {
   threeText: string;
