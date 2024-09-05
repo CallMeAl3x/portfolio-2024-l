@@ -1,5 +1,0 @@
-# This directory is a Syncthing folder marker.
-# Do not delete.
-
-folderID: portfolio
-created: 2024-09-04T00:34:03-04:00

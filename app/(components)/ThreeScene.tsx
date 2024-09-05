@@ -4,7 +4,6 @@ import React, { useRef, useEffect, useState } from "react";
 import * as THREE from "three";
 import { FontLoader } from "three/addons/loaders/FontLoader.js";
 import { ExtendedFont } from "../(types)/three";
-import { CONFIG } from "./config";
 import { Environment } from "./Environment";
 
 type Font = ExtendedFont;
