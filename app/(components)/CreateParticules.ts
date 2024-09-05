@@ -129,7 +129,7 @@ export class CreateParticles {
   releaseParticles() {
     const pos = this.particles.geometry.attributes.position;
     const copy = this.geometryCopy.attributes.position;
-    const coulors = this.particles.geometry.attributes.customColor;
+    const colors = this.particles.geometry.attributes.customColor;
     const size = this.particles.geometry.attributes.size;
 
     const centerX = 0;
@@ -166,12 +166,12 @@ export class CreateParticles {
       );
 
       this.colorChange.setHSL(0.5 + Math.random() * 0.2, 0.75, 0.5);
-      this.setColorValues(coulors, i, this.colorChange);
+      this.setColorValues(colors, i, this.colorChange);
       size.array[i] = this.data.particleSize * 0.5;
     }
 
     pos.needsUpdate = true;
-    coulors.needsUpdate = true;
+    colors.needsUpdate = true;
     size.needsUpdate = true;
 
     this.data.ease = 0.055; // Vitesse de retour des particules devant et derrière (SEULEMENT ANIMATION)
