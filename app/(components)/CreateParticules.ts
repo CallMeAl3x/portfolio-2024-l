@@ -4,7 +4,6 @@ import { vertexShader, fragmentShader } from "./shaders";
 import { CONFIG, Config } from "./config";
 
 export class CreateParticles {
-  isAnimating: boolean;
   scene: THREE.Scene;
   font: Font;
   particleImg: Texture;
@@ -20,6 +19,7 @@ export class CreateParticles {
     amount: number;
     particleSize: number;
     particleColor: number;
+    absorptionSpeed: number;
     textColor: string;
     textSize: number;
     area: number;
@@ -46,7 +46,6 @@ export class CreateParticles {
     config: Config
   ) {
     this.scene = scene;
-    this.isAnimating = true;
     this.font = font;
     this.particleImg = particleImg;
     this.camera = camera;
@@ -63,33 +62,27 @@ export class CreateParticles {
       text: text,
       amount: config.particleAmount,
       particleSize: config.particleSize,
-      particleColor: config.particleColor, // Initialisation correcte de la couleur
+      particleColor: config.particleColor,
+      absorptionSpeed: config.absorptionSpeed,
       textColor: config.textColor,
       textSize: textSize,
       area: config.area,
       ease: config.ease,
     };
 
-    this.colorChange = new THREE.Color(this.data.particleColor); // Utiliser la couleur de la config
+    this.colorChange = new THREE.Color(this.data.particleColor);
 
     this.buttom = false;
 
     this.config = config;
 
-    this.data = {
-      text: text,
-      amount: config.particleAmount,
-      particleSize: config.particleSize,
-      particleColor: config.particleColor,
-      textColor: config.textColor,
-      textSize: textSize,
-      area: config.area,
-      ease: config.ease,
-    };
-
     this.setup();
     this.bindEvents();
   }
+
+  setColorValues = (coulors: any, i: number, color: THREE.Color) => {
+    coulors.setXYZ(i, color.r, color.g, color.b);
+  };
 
   setup() {
     const geometry = new THREE.PlaneGeometry(
@@ -111,50 +104,26 @@ export class CreateParticles {
     const coulors = this.particles.geometry.attributes.customColor;
     const size = this.particles.geometry.attributes.size;
 
-    const centerX = 0;
-    const centerY = 0;
+    const center = new THREE.Vector3(0, 0, 0);
 
     for (let i = 0, l = pos.count; i < l; i++) {
-      const initX = copy.getX(i);
-      const initY = copy.getY(i);
-      const initZ = copy.getZ(i);
-
-      // Calculer la direction vers le centre
-      const dirX = centerX - initX;
-      const dirY = centerY - initY;
-      const dirZ = -initZ;
-
-      // Normaliser la direction
-      const length = Math.sqrt(dirX * dirX + dirY * dirY + dirZ * dirZ);
-      const normX = dirX / length;
-      const normY = dirY / length;
-      const normZ = dirZ / length;
-
-      // Éparpiller la particule
-      const distance = Math.random() * 10000; // Distance aléatoire jusqu'à 5 unités du centre
-      const newX = centerX - normX * distance;
-      const newY = centerY - normY * distance;
-      const newZ = -normZ * distance;
-
-      pos.setXYZ(i, newX, newY, newZ);
-
-      // Ajuster la couleur et la taille
-      this.colorChange.setHSL(0.5 + Math.random() * 0.2, 0.75, 0.5);
-      coulors.setXYZ(
-        i,
-        this.colorChange.r,
-        this.colorChange.g,
-        this.colorChange.b
+      const initPos = new THREE.Vector3(
+        copy.getX(i),
+        copy.getY(i),
+        copy.getZ(i)
       );
+      const direction = center.clone().sub(initPos).normalize();
+      const distance = Math.random() * 10000;
+      const newPos = center.clone().sub(direction.multiplyScalar(distance));
+
+      pos.setXYZ(i, newPos.x, newPos.y, newPos.z);
+
+      this.setColorValues(coulors, i, this.colorChange);
       size.array[i] = this.data.particleSize * 0.5;
     }
 
-    pos.needsUpdate = true;
-    coulors.needsUpdate = true;
-    size.needsUpdate = true;
-
-    this.isAnimating = true;
-    this.data.ease = 0.035;
+    pos.needsUpdate = coulors.needsUpdate = size.needsUpdate = true;
+    this.data.ease = 0.035; // Vitesse de mise en place des particules devant et derrière (SEULEMENT ANIMATION)
   }
 
   releaseParticles() {
@@ -165,31 +134,26 @@ export class CreateParticles {
 
     const centerX = 0;
     const centerY = 0;
-    const interpolationFactor = 0.8; // Contrôle la vitesse du retour
+    const interpolationFactor = 0.8; // Vitesse du retour des particules derrière le texte plus c'est rapide plus y'a de particules qui bougent (n'augmente pas la durée de l'animation)
 
     for (let i = 0, l = pos.count; i < l; i++) {
       const initX = copy.getX(i);
       const initY = copy.getY(i);
       const initZ = copy.getZ(i);
 
-      // Calculer la direction vers le centre
       const dirX = centerX - initX;
       const dirY = centerY - initY;
       const dirZ = -initZ;
 
-      // Normaliser la direction
       const length = Math.sqrt(dirX * dirX + dirY * dirY + dirZ * dirZ);
       const normX = dirX / length;
       const normY = dirY / length;
       const normZ = dirZ / length;
 
-      // Positionner la particule près du centre
-      const distance = 1; // Distance fixe au centre
-      const newX = centerX - normX * distance;
-      const newY = centerY - normY * distance;
-      const newZ = -normZ * distance;
+      const newX = centerX - normX;
+      const newY = centerY - normY;
+      const newZ = -normZ;
 
-      // Ajuster la position avec interpolation
       const currentX = pos.getX(i);
       const currentY = pos.getY(i);
       const currentZ = pos.getZ(i);
@@ -201,14 +165,8 @@ export class CreateParticles {
         currentZ + (newZ - currentZ) * interpolationFactor
       );
 
-      // Ajuster la couleur et la taille
       this.colorChange.setHSL(0.5 + Math.random() * 0.2, 0.75, 0.5);
-      coulors.setXYZ(
-        i,
-        this.colorChange.r,
-        this.colorChange.g,
-        this.colorChange.b
-      );
+      this.setColorValues(coulors, i, this.colorChange);
       size.array[i] = this.data.particleSize * 0.5;
     }
 
@@ -216,8 +174,7 @@ export class CreateParticles {
     coulors.needsUpdate = true;
     size.needsUpdate = true;
 
-    this.isAnimating = true;
-    this.data.ease = 0.035; // Vitesse de retour
+    this.data.ease = 0.055; // Vitesse de retour des particules devant et derrière (SEULEMENT ANIMATION)
   }
 
   resetMousePosition() {
@@ -238,20 +195,13 @@ export class CreateParticles {
 
     const vector = new THREE.Vector3(this.mouse.x, this.mouse.y, 0.5);
     vector.unproject(this.camera);
-    const dir = vector.sub(this.camera.position).normalize();
-    const distance = -this.camera.position.z / dir.z;
-    const currenPosition = this.camera.position
-      .clone()
-      .add(dir.multiplyScalar(distance));
-
-    const pos = this.particles.geometry.attributes.position;
     this.buttom = true;
     this.data.ease = 0.01;
   }
 
   onMouseUp() {
     this.buttom = false;
-    this.data.ease = 0.035;
+    this.data.ease = 0.095; // Vitesse à laquelle les particules reviennent à leur position initiale
   }
 
   onMouseMove(event: MouseEvent) {
@@ -261,7 +211,6 @@ export class CreateParticles {
 
   render() {
     const time = ((0.001 * performance.now()) % 12) / 12;
-    const zigzagTime = (1 + Math.sin(time * 2 * Math.PI)) / 6;
 
     this.raycaster.setFromCamera(this.mouse, this.camera);
 
@@ -285,18 +234,12 @@ export class CreateParticles {
       let py = pos.getY(i);
       let pz = pos.getZ(i);
 
-      this.colorChange = new THREE.Color(this.data.textColor); // Couleur du texte
-      coulors.setXYZ(
-        i,
-        this.colorChange.r,
-        this.colorChange.g,
-        this.colorChange.b
-      );
+      this.colorChange = new THREE.Color(this.data.textColor);
+      this.setColorValues(coulors, i, this.colorChange);
       coulors.needsUpdate = true;
 
       let dx = mx - px;
       let dy = my - py;
-      const dz = mz - pz;
 
       const mouseDistance = this.distance(mx, my, px, py);
       const d = dx * dx + dy * dy;
@@ -307,14 +250,12 @@ export class CreateParticles {
         px -= f * Math.cos(t);
         py -= f * Math.sin(t);
 
-        // Changement de couleur en bleu fixe
-        this.colorChange = new THREE.Color(this.data.particleColor); // Couleur des particules (en fond)
-        coulors.setXYZ(
-          i,
-          this.colorChange.r,
-          this.colorChange.g,
-          this.colorChange.b
-        );
+        const absorptionSpeed = CONFIG.absorptionSpeed; // Augmenter cette valeur pour accélérer l'absorption des particules
+        px -= absorptionSpeed * f * Math.cos(t);
+        py -= absorptionSpeed * f * Math.sin(t);
+
+        this.colorChange = new THREE.Color(this.data.particleColor);
+        this.setColorValues(coulors, i, this.colorChange);
         coulors.needsUpdate = true;
 
         if (
@@ -323,30 +264,18 @@ export class CreateParticles {
           py > initY + 70 ||
           py < initY - 70
         ) {
-          this.colorChange = new THREE.Color(this.data.particleColor); // Couleur des particules (en fond)
-          coulors.setXYZ(
-            i,
-            this.colorChange.r,
-            this.colorChange.g,
-            this.colorChange.b
-          );
+          this.setColorValues(coulors, i, this.colorChange);
           coulors.needsUpdate = true;
         }
       } else {
-        // Comportement lorsque le bouton n'est pas enfoncé (reste inchangé)
         if (mouseDistance < this.data.area) {
           if (i % 5 == 0) {
             const t = Math.atan2(dy, dx);
             px -= 0.03 * Math.cos(t);
             py -= 0.03 * Math.sin(t);
 
-            this.colorChange = new THREE.Color(this.data.particleColor); // Couleur des particules (en fond)
-            coulors.setXYZ(
-              i,
-              this.colorChange.r,
-              this.colorChange.g,
-              this.colorChange.b
-            );
+            this.colorChange = new THREE.Color(this.data.particleColor);
+            this.setColorValues(coulors, i, this.colorChange);
             coulors.needsUpdate = true;
 
             size.array[i] = this.data.particleSize / 1.2;
@@ -367,12 +296,7 @@ export class CreateParticles {
             py < initY - 10
           ) {
             this.colorChange = new THREE.Color(this.data.particleColor); // Couleur des particules (en fond)
-            coulors.setXYZ(
-              i,
-              this.colorChange.r,
-              this.colorChange.g,
-              this.colorChange.b
-            );
+            this.setColorValues(coulors, i, this.colorChange);
             coulors.needsUpdate = true;
 
             size.array[i] = this.data.particleSize / 1.8;
@@ -421,7 +345,6 @@ export class CreateParticles {
       }
     }
 
-    // Utiliser le type correct pour shapes
     shapes.push.apply(holeShapes as THREE.Shape[]);
 
     let colors: number[] = [];
@@ -499,12 +422,11 @@ export class CreateParticles {
   }
 
   dispose() {
-    // Remove event listeners
+    // Optmisation de la performance en enlevant les event listeners and disposer les objects
     document.removeEventListener("mousedown", this.onMouseDown.bind(this));
     document.removeEventListener("mousemove", this.onMouseMove.bind(this));
     document.removeEventListener("mouseup", this.onMouseUp.bind(this));
 
-    // Dispose of Three.js objects
     if (this.particles) {
       this.particles.geometry.dispose();
       (this.particles.material as THREE.Material).dispose();

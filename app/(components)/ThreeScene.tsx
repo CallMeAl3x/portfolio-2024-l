@@ -41,12 +41,15 @@ const ThreeScene: React.FC<ThreeSceneProps> = ({
       try {
         const [loadedFont, particle] = await Promise.all([
           new Promise<Font>((resolve) =>
-            fontLoader.load(CONFIG.fontPath(font), (loadedFont) => {
-              resolve(loadedFont as unknown as Font);
-            })
+            fontLoader.load(
+              `/fonts/${font}/${font}_Regular_Spaced_Lined.json`,
+              (loadedFont) => {
+                resolve(loadedFont as unknown as Font);
+              }
+            )
           ),
           new Promise<Texture>((resolve) =>
-            textureLoader.load(CONFIG.particleTexturePath, resolve)
+            textureLoader.load("/images/particules_white.png", resolve)
           ),
         ]);
 
@@ -65,16 +68,10 @@ const ThreeScene: React.FC<ThreeSceneProps> = ({
           );
 
           if (environmentRef.current) {
-            // Appliquer l'absorption maximale
+            // Lancer l'animation
             environmentRef.current.createParticles.setMaxAbsorption();
-
-            // Attendre 1 seconde supplémentaire avant de relâcher les particules
-            if (environmentRef.current) {
-              environmentRef.current.createParticles.releaseParticles();
-
-              // Attendre un peu plus longtemps pour réinitialiser la position de la souris
-              environmentRef.current?.createParticles.resetMousePosition();
-            }
+            environmentRef.current.createParticles.releaseParticles();
+            environmentRef.current.createParticles.resetMousePosition();
           }
         }
       } catch (error) {
